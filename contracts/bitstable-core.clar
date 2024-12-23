@@ -73,3 +73,42 @@
     ;; Check if the fee is within the allowed range
     (<= fee maximum-fee)
 )
+
+;; Public Functions
+(define-public (initialize (btc-price uint))
+    ;; Initialize the contract with the initial BTC price
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (asserts! (not (var-get initialized)) err-already-initialized)
+        (asserts! (is-valid-price btc-price) err-invalid-parameter)
+        (var-set last-price btc-price)
+        (var-set price-valid true)
+        (var-set initialized true)
+        (ok true)
+    )
+)
+
+(define-public (create-vault (collateral-amount uint))
+    ;; Create a new vault with the specified collateral amount
+    (let (
+        (existing-vault (default-to 
+            {
+                collateral: u0,
+                debt: u0,
+                last-fee-timestamp: (unwrap-panic (get-block-info? time u0))
+            }
+            (map-get? vaults tx-sender)
+        ))
+    )
+    (begin
+        (asserts! (var-get initialized) err-not-initialized)
+        (asserts! (not (var-get emergency-shutdown)) err-emergency-shutdown)
+        (try! (stx-transfer? collateral-amount tx-sender (as-contract tx-sender)))
+        (map-set vaults tx-sender 
+            (merge existing-vault {
+                collateral: (+ collateral-amount (get collateral existing-vault))
+            })
+        )
+        (ok true)
+    ))
+)
