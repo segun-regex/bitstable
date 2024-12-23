@@ -38,3 +38,38 @@
 (define-data-var last-price uint u0) ;; Latest BTC/USD price
 (define-data-var price-valid bool false)
 (define-data-var governance-token principal 'SP000000000000000000002Q6VF78.governance-token)
+
+;; Storage
+(define-map vaults
+    principal
+    {
+        collateral: uint,
+        debt: uint,
+        last-fee-timestamp: uint
+    }
+)
+
+(define-map liquidators principal bool)
+(define-map price-oracles principal bool)
+
+;; Validation Functions
+(define-private (is-valid-price (price uint))
+    ;; Check if the price is within the allowed range
+    (and 
+        (>= price minimum-price)
+        (<= price maximum-price)
+    )
+)
+
+(define-private (is-valid-ratio (ratio uint))
+    ;; Check if the ratio is within the allowed range
+    (and 
+        (>= ratio minimum-ratio)
+        (<= ratio maximum-ratio)
+    )
+)
+
+(define-private (is-valid-fee (fee uint))
+    ;; Check if the fee is within the allowed range
+    (<= fee maximum-fee)
+)
