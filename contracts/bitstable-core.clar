@@ -112,3 +112,47 @@
         (ok true)
     ))
 )
+
+(define-public (mint-stablecoin (amount uint))
+    ;; Mint new stablecoins by increasing the debt of the vault
+    (let (
+        (vault (unwrap! (map-get? vaults tx-sender) err-low-balance))
+        (current-collateral (get collateral vault))
+        (current-debt (get debt vault))
+        (new-debt (+ current-debt amount))
+        (collateral-value (* current-collateral (var-get last-price)))
+    )
+    (begin
+        (asserts! (var-get initialized) err-not-initialized)
+        (asserts! (not (var-get emergency-shutdown)) err-emergency-shutdown)
+        (asserts! (var-get price-valid) err-invalid-price)
+        ;; Check if new debt maintains minimum collateral ratio
+        (asserts! (>= (* collateral-value u100) 
+            (* new-debt (var-get minimum-collateral-ratio))) 
+            err-below-mcr)
+        (map-set vaults tx-sender
+            (merge vault {
+                debt: new-debt
+            })
+        )
+        (ok true)
+    ))
+)
+
+(define-public (repay-debt (amount uint))
+    ;; Repay the specified amount of debt in the vault
+    (let (
+        (vault (unwrap! (map-get? vaults tx-sender) err-low-balance))
+        (current-debt (get debt vault))
+    )
+    (begin
+        (asserts! (var-get initialized) err-not-initialized)
+        (asserts! (>= current-debt amount) err-low-balance)
+        (map-set vaults tx-sender
+            (merge vault {
+                debt: (- current-debt amount)
+            })
+        )
+        (ok true)
+    ))
+)
