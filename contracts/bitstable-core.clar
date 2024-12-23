@@ -283,3 +283,23 @@
         (ok true)
     )
 )
+
+(define-public (add-liquidator (liquidator principal))
+    ;; Add a new authorized liquidator
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (asserts! (not (is-authorized-liquidator liquidator)) err-invalid-parameter)
+        (map-set liquidators liquidator true)
+        (ok true)
+    )
+)
+
+(define-public (remove-liquidator (liquidator principal))
+    ;; Remove an authorized liquidator
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (asserts! (is-authorized-liquidator liquidator) err-invalid-parameter)
+        (map-delete liquidators liquidator)
+        (ok true)
+    )
+)
