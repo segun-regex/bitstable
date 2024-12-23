@@ -238,3 +238,27 @@
         )
     ))
 )
+
+;; Oracle Functions
+(define-public (update-price (new-price uint))
+    ;; Update the BTC/USD price by an authorized oracle
+    (begin
+        (asserts! (is-authorized-oracle tx-sender) err-owner-only)
+        (asserts! (is-valid-price new-price) err-invalid-parameter)
+        (var-set last-price new-price)
+        (var-set price-valid true)
+        (ok true)
+    )
+)
+
+;; Governance Functions
+(define-public (set-minimum-collateral-ratio (new-ratio uint))
+    ;; Set a new minimum collateral ratio
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (asserts! (is-valid-ratio new-ratio) err-invalid-parameter)
+        (asserts! (> new-ratio (var-get liquidation-ratio)) err-invalid-parameter)
+        (var-set minimum-collateral-ratio new-ratio)
+        (ok true)
+    )
+)
