@@ -28,3 +28,13 @@
 (define-constant maximum-ratio u1000) ;; Maximum collateral ratio (1000%)
 (define-constant minimum-ratio u101) ;; Minimum collateral ratio (101%)
 (define-constant maximum-fee u100) ;; Maximum stability fee (100%)
+
+;; Data Variables
+(define-data-var minimum-collateral-ratio uint u150) ;; 150% collateralization ratio
+(define-data-var liquidation-ratio uint u120) ;; 120% liquidation threshold
+(define-data-var stability-fee uint u2) ;; 2% annual stability fee
+(define-data-var initialized bool false)
+(define-data-var emergency-shutdown bool false)
+(define-data-var last-price uint u0) ;; Latest BTC/USD price
+(define-data-var price-valid bool false)
+(define-data-var governance-token principal 'SP000000000000000000002Q6VF78.governance-token)
