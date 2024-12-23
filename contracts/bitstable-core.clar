@@ -303,3 +303,23 @@
         (ok true)
     )
 )
+
+(define-public (add-oracle (oracle principal))
+    ;; Add a new authorized price oracle
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (asserts! (not (is-authorized-oracle oracle)) err-invalid-parameter)
+        (map-set price-oracles oracle true)
+        (ok true)
+    )
+)
+
+(define-public (remove-oracle (oracle principal))
+    ;; Remove an authorized price oracle
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (asserts! (is-authorized-oracle oracle) err-invalid-parameter)
+        (map-delete price-oracles oracle)
+        (ok true)
+    )
+)
