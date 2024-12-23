@@ -323,3 +323,13 @@
         (ok true)
     )
 )
+
+;; Emergency Functions
+(define-public (trigger-emergency-shutdown)
+    ;; Trigger an emergency shutdown of the system
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (var-set emergency-shutdown true)
+        (ok true)
+    )
+)
