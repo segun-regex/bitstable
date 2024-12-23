@@ -186,3 +186,55 @@
         (ok true)
     ))
 )
+
+;; Liquidation Functions
+(define-public (liquidate (vault-owner principal))
+	;; Liquidate a vault if it falls below the liquidation ratio
+    (let (
+        (vault (unwrap! (map-get? vaults vault-owner) err-low-balance))
+        (collateral (get collateral vault))
+        (debt (get debt vault))
+        (collateral-value (* collateral (var-get last-price)))
+    )
+    (begin
+        ;; Basic checks
+        (asserts! (var-get initialized) err-not-initialized)
+        (asserts! (var-get price-valid) err-invalid-price)
+        (asserts! (is-authorized-liquidator tx-sender) err-owner-only)
+        
+        ;; Additional validation
+        (asserts! (not (is-eq vault-owner tx-sender)) err-invalid-parameter) ;; Prevent self-liquidation
+        (asserts! (not (is-eq vault-owner contract-owner)) err-invalid-parameter) ;; Protect contract owner
+        (asserts! (> collateral u0) err-invalid-parameter) ;; Ensure vault has collateral
+        (asserts! (> debt u0) err-invalid-parameter) ;; Ensure vault has debt
+        
+        ;; Check if vault is below liquidation ratio with precise arithmetic
+        (asserts! (< (* collateral-value u100)
+            (* debt (var-get liquidation-ratio)))
+            err-insufficient-collateral)
+            
+        ;; Save state locally to ensure consistency
+        (let (
+            (collateral-to-transfer collateral)
+            (debt-to-clear debt)
+        )
+            ;; Clear vault state atomically
+            (map-set vaults vault-owner
+                {
+                    collateral: u0,
+                    debt: u0,
+                    last-fee-timestamp: (get last-fee-timestamp vault)
+                }
+            )
+            
+            ;; Transfer collateral to liquidator
+            (try! (as-contract (stx-transfer? collateral-to-transfer (as-contract tx-sender) tx-sender)))
+            
+            ;; Emit liquidation event (if supported by the chain)
+            ;; (print {event: "liquidation", vault-owner: vault-owner, liquidator: tx-sender, 
+            ;;         collateral: collateral-to-transfer, debt: debt-to-clear})
+            
+            (ok true)
+        )
+    ))
+)
