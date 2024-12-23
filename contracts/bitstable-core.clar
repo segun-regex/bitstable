@@ -262,3 +262,24 @@
         (ok true)
     )
 )
+
+(define-public (set-liquidation-ratio (new-ratio uint))
+    ;; Set a new liquidation ratio
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (asserts! (is-valid-ratio new-ratio) err-invalid-parameter)
+        (asserts! (< new-ratio (var-get minimum-collateral-ratio)) err-invalid-parameter)
+        (var-set liquidation-ratio new-ratio)
+        (ok true)
+    )
+)
+
+(define-public (set-stability-fee (new-fee uint))
+    ;; Set a new stability fee
+    (begin
+        (asserts! (is-eq tx-sender contract-owner) err-owner-only)
+        (asserts! (is-valid-fee new-fee) err-invalid-parameter)
+        (var-set stability-fee new-fee)
+        (ok true)
+    )
+)
